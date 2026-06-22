@@ -138,10 +138,10 @@ class FeatureEngine:
 
         bb = ta.bbands(df['close'], length=20, std=2.0)
         if bb is not None and not bb.empty:
-            df['bb_lower'] = bb['BBL_20_2.0']
-            df['bb_middle'] = bb['BBM_20_2.0']
-            df['bb_upper'] = bb['BBU_20_2.0']
-            df['bb_width'] = (bb['BBU_20_2.0'] - bb['BBL_20_2.0']) / (bb['BBM_20_2.0'] + 1e-10)
+            df['bb_lower'] = bb.iloc[:, 0]
+            df['bb_middle'] = bb.iloc[:, 1]
+            df['bb_upper'] = bb.iloc[:, 2]
+            df['bb_width'] = (bb.iloc[:, 2] - bb.iloc[:, 0]) / (bb.iloc[:, 1] + 1e-10)
             df['bb_pct'] = (df['close'] - df['bb_lower']) / (df['bb_upper'] - df['bb_lower'] + 1e-10)
             df['bb_squeeze'] = (df['bb_width'] < df['bb_width'].rolling(20).quantile(0.2)).astype(np.int8)
         else:
