@@ -8,7 +8,7 @@ from collections import deque
 
 class PPOAgent:
     
-    def __init__(self, cfg: Dict = None, state_shape: Tuple = env.state_shape, n_actions: int = 4):
+    def __init__(self, cfg: Dict = None, state_shape: Tuple = None, n_actions: int = 4):
         self.cfg = cfg or {}
         self.gamma = self.cfg.get('rl_gamma', 0.99)
         self.clip_eps = self.cfg.get('rl_clip_epsilon', 0.2)
