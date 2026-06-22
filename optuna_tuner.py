@@ -11,9 +11,10 @@ try:
     from optuna.pruners import MedianPruner
     from optuna.integration import TFKerasPruningCallback
     OPTUNA_AVAILABLE = True
-except ImportError:
+except ImportError as e:
+    print(f"Optuna import error: {e}")
     OPTUNA_AVAILABLE = False
-    logger.warning("Optuna not installed. Hyperparameter tuning disabled.")
+    logger.warning("Optuna not installed.")
 
 class OptunaTuner:
     
