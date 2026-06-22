@@ -39,7 +39,7 @@ class AlphaFactorEngine:
             mean_centered = segment - np.mean(segment)
             cumsum = np.cumsum(mean_centered)
             r = np.max(cumsum) - np.min(cumsum)
-            s = np.std(segment, ddof=1)
+            s = np.std(segment)
             if s > 1e-10:
                 rs = r / s
                 h = np.log(rs) / np.log(window)
