@@ -340,7 +340,7 @@ class TradingEnvironment:
                         'pnl_pct': -1.0,
                         'pnl_cash': -wiped_margin,
                         'mae': self.mae,
-                        'mfe': self.mfe
+                        'mfe': self.mfe,
                         'bars_held': self.current_idx - self.entry_idx,
                         'exit_reason': 'liquidation',
                         'side': self.position_side
