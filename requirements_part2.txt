@@ -1,0 +1,14 @@
+numpy>=1.23.5,<1.25.0
+pandas>=1.5.3
+pandas-ta>=0.3.14b0
+scipy>=1.10.1
+scikit-learn>=1.2.2
+tensorflow>=2.13.0,<2.15.0
+xgboost>=1.7.6
+lightgbm>=3.3.5
+optuna>=3.2.0
+shap>=0.41.0
+joblib>=1.2.0
+boruta>=0.3
+matplotlib>=3.7.1
+seaborn>=0.12.2
