@@ -338,7 +338,7 @@ class TrainingPipeline:
 
             logger.info("➤ Running Boruta+SHAP selector *ONLY* on feature_engine variables...")
             brain = FeatureBrain(self.config)
-            selected_base = brain.select_base_features(df_train_feats[base_cols])
+            selected_base = brain.select_base_features(df_train_feats[base_cols + ['close']])
 
             # ----------------------------------------------------------------
             # STEP 7: COMBINE PURE INPUT FEATURES ONLY (Strictly X-Variables)
