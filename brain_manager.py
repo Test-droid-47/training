@@ -159,7 +159,7 @@ class FeatureBrain:
     selected = confirmed if len(confirmed) >= 5 else (confirmed + tentative)
 except Exception as e:
     logger.error(f"BorutaShap execution failed: {e}. Falling back to correlation.")
-    selected = []]
+    selected = []
 
         if len(selected) == 0:
             logger.warning("Boruta selected 0 features, using top 30 by correlation")
