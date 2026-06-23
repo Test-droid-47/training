@@ -9,12 +9,28 @@ try:
     import optuna
     from optuna.samplers import TPESampler
     from optuna.pruners import MedianPruner
-    from optuna.integration import TFKerasPruningCallback
+    # FIX: Legacy TFKerasPruningCallback removed as it crashes on Keras 3 multi-output
     OPTUNA_AVAILABLE = True
-except ImportError as e:
-    print(f"Optuna import error: {e}")
+except ImportError:
     OPTUNA_AVAILABLE = False
-    logger.warning("Optuna not installed.")
+    logger.warning("Optuna not installed. Hyperparameter tuning disabled.")
+
+# FIX: Professional Keras 3 Native Pruning Callback to handle multi-output gracefully
+import tensorflow as tf
+class Keras3OptunaPruningCallback(tf.keras.callbacks.Callback):
+    def __init__(self, trial, monitor: str = 'val_loss'):
+        super().__init__()
+        self.trial = trial
+        self.monitor = monitor
+
+    def on_epoch_end(self, epoch, logs=None):
+        logs = logs or {}
+        val_loss = logs.get(self.monitor)
+        if val_loss is not None:
+            self.trial.report(float(val_loss), step=epoch)
+            if self.trial.should_prune():
+                message = f"Trial pruned at epoch {epoch}."
+                raise optuna.TrialPruned(message)
 
 class OptunaTuner:
     
@@ -64,14 +80,21 @@ class OptunaTuner:
             try:
                 from prediction_model import PredictionModel
                 from tensorflow.keras.callbacks import EarlyStopping
-                import tensorflow as tf
+                from sklearn.utils.class_weight import compute_class_weight
                 
                 model = PredictionModel(params)
                 model.build((X_train.shape[1], X_train.shape[2]))
                 
+                # FIX: Injected balanced class weights so Optuna optimizes for real features, not majority class guessing
+                classes = np.unique(y_train_dict['direction'])
+                computed_weights = compute_class_weight(class_weight='balanced', classes=classes, y=y_train_dict['direction'])
+                class_weight_dict = {int(cls): float(weight) for cls, weight in zip(classes, computed_weights)}
+                multi_output_class_weights = {'direction': class_weight_dict}
+                
+                # FIX: Swapped to our robust Keras 3 native pruning callback
                 callbacks = [
                     EarlyStopping(monitor='val_loss', patience=3, restore_best_weights=True, verbose=0),
-                    TFKerasPruningCallback(trial, 'val_loss')
+                    Keras3OptunaPruningCallback(trial, 'val_loss')
                 ]
                 
                 history = model.model.fit(
@@ -80,6 +103,7 @@ class OptunaTuner:
                     epochs=self.n_epochs,
                     batch_size=batch_size,
                     callbacks=callbacks,
+                    class_weight=multi_output_class_weights,  # FIX: Passed balanced weights to fit
                     shuffle=False,
                     verbose=0
                 )
@@ -122,7 +146,8 @@ class OptunaTuner:
             
             tuned_cfg = {**self.cfg, **self.best_params}
             
-            if self.study.best_value > 10:
+            # FIX: Adjusted threshold filter safety buffer to accommodate multi-task combined loss ranges
+            if self.study.best_value > 50.0:
                 logger.warning(f"Best loss {self.study.best_value:.4f} too high, using defaults")
                 return self._defaults()
             
@@ -133,7 +158,8 @@ class OptunaTuner:
             return self._defaults()
 
     def _defaults(self) -> Dict:
-        return {
+        # FIX: Ensure fallback dictionary preserves the entire context of self.cfg instead of wiping metadata fields
+        defaults_dict = {
             'lstm_units_1': self.cfg.get('lstm_units_1', 128),
             'lstm_units_2': self.cfg.get('lstm_units_2', 64),
             'dropout_rate': self.cfg.get('dropout_rate', 0.2),
@@ -142,6 +168,7 @@ class OptunaTuner:
             'attention_key_dim': self.cfg.get('attention_key_dim', 32),
             'batch_size': self.cfg.get('batch_size', 32),
         }
+        return {**self.cfg, **defaults_dict}
 
     def get_best_params(self) -> Dict:
         return self.best_params if self.best_params else self._defaults()
@@ -153,3 +180,4 @@ class OptunaTuner:
             except Exception as e:
                 logger.warning(f"Could not get trials dataframe: {e}")
         return pd.DataFrame()
+                
