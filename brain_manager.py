@@ -133,24 +133,33 @@ class FeatureBrain:
         feat_selector = BorutaShap(model=model, importance_measure='shap', classification=True)
 
         try:
-            feat_selector.fit(X=X, y=y, n_trials=self.n_trials, random_state=42, sample=False, train_or_test='train')
-        
-            # BorutaShap version compatibility
-            if hasattr(feat_selector, 'accepted_features'):
-                confirmed = feat_selector.accepted_features
-                tentative = feat_selector.tentative_features
-            elif hasattr(feat_selector, 'get_accepted_features'):
-                confirmed = feat_selector.get_accepted_features()
-                tentative = feat_selector.get_tentative_features()
-            else:
-                # Old versions (pre-2024)
-                confirmed = feat_selector.confirmed_
-                tentative = feat_selector.tentative_
-        
-            selected = confirmed if len(confirmed) >= 5 else (confirmed + tentative)
-        except Exception as e:
-            logger.error(f"BorutaShap execution failed: {e}. Falling back to correlation.")
-            selected = []
+    feat_selector.fit(X=X, y=y, n_trials=self.n_trials, random_state=42, sample=False, train_or_test='train')
+    
+    # BorutaShap version compatibility (2024-2025 versions)
+    if hasattr(feat_selector, 'accepted'):
+        confirmed = feat_selector.accepted
+        tentative = feat_selector.tentative
+    elif hasattr(feat_selector, 'accepted_features'):
+        confirmed = feat_selector.accepted_features
+        tentative = feat_selector.tentative_features
+    elif hasattr(feat_selector, 'get_accepted_features'):
+        confirmed = feat_selector.get_accepted_features()
+        tentative = feat_selector.get_tentative_features()
+    else:
+        # Ultimate fallback: use support_ mask
+        if hasattr(feat_selector, 'support_'):
+            confirmed = X.columns[feat_selector.support_].tolist()
+            tentative = X.columns[feat_selector.support_weak_].tolist() if hasattr(feat_selector, 'support_weak_') else []
+        else:
+            # Last resort: log error and return empty
+            logger.error("No method found to retrieve BorutaSHAP results")
+            confirmed = []
+            tentative = []
+    
+    selected = confirmed if len(confirmed) >= 5 else (confirmed + tentative)
+except Exception as e:
+    logger.error(f"BorutaShap execution failed: {e}. Falling back to correlation.")
+    selected = []]
 
         if len(selected) == 0:
             logger.warning("Boruta selected 0 features, using top 30 by correlation")
