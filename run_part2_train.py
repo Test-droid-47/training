@@ -317,13 +317,14 @@ class TrainingPipeline:
                 df_val_raw = df_val_raw.set_index(pd.to_datetime(df_val_raw['timestamp'], utc=True))
 
             logger.info("Building features on isolated Training Split via Unified FeatureEngine...")
-            df_train_feats = FeatureEngine.build_all(df_train_raw.copy())
+            fe=FeatureEngine(cfg=self.config)
+            df_train_feats = fe.build_all(df_train_raw.copy())
             df_train_feats = df_train_feats.reset_index(drop=True)
             df_train_feats.replace([np.inf, -np.inf], np.nan, inplace=True)
             df_train_feats = df_train_feats.ffill().bfill()
 
             logger.info("Building features on isolated Validation Split (with history buffer)...")
-            df_val_feats = FeatureEngine.build_all(df_val_raw.copy())
+            df_val_feats = fe.build_all(df_val_raw.copy())
             df_val_feats = df_val_feats.reset_index(drop=True)
             df_val_feats.replace([np.inf, -np.inf], np.nan, inplace=True)
             df_val_feats = df_val_feats.ffill().bfill()
