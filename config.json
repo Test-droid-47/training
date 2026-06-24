@@ -44,7 +44,7 @@
     "_comment_13": "═══════════════════════════════════════════════════════════════════",
     "_comment_14": "═══════  PART 2: OPTUNA (HYPERPARAMETER TUNING)  ═══════",
     "_comment_15": "═══════════════════════════════════════════════════════════════════",
-    "optuna_enabled": true,
+    "optuna_enabled": false,
     "optuna_trials": 15,
     "optuna_epochs": 10,
 
