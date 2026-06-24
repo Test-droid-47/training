@@ -281,7 +281,7 @@ class FeatureEngine:
             df_dt = df[['timestamp', 'high', 'low']].copy()
             df_dt['timestamp'] = pd.to_datetime(df_dt['timestamp'])
             df_dt = df_dt.set_index('timestamp')
-            df_4h = df_dt.resample('4H').agg({'high': 'max', 'low': 'min'})
+            df_4h = df_dt.resample('4h').agg({'high': 'max', 'low': 'min'})
             df_4h = df_4h.reindex(df_dt.index, method='ffill')
             df['htf_high'] = df_4h['high'].values
             df['htf_low'] = df_4h['low'].values
