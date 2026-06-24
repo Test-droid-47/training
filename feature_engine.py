@@ -43,7 +43,7 @@ class FeatureEngine:
             mean_centered = segment - np.mean(segment)
             cumsum = np.cumsum(mean_centered)
             r = np.max(cumsum) - np.min(cumsum)
-            s = np.std(segment, ddof=1)
+            s = np.sqrt(np.sum((segment - np.mean(segment))**2) / (len(segment) - 1))
             if s > 1e-10:
                 rs = r / s
                 h = np.log(rs) / np.log(window)
