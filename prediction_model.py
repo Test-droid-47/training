@@ -35,7 +35,7 @@ class PredictionModel:
         self._calib_exit: np.ndarray = np.array([])
 
     def _transformer_block(self, x, num_heads, key_dim, ff_dim, dropout, name=''):
-        seq_len = tf.shape(x)[1]
+        seq_len = self.cfg.get('window', 120)
         causal_mask = tf.linalg.band_part(tf.ones((seq_len, seq_len)), -1, 0)
         causal_mask = tf.cast(causal_mask, tf.bool)
         attn = MultiHeadAttention(num_heads=num_heads, key_dim=key_dim, name=f'mha_{name}')(
