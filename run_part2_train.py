@@ -209,6 +209,23 @@ class TrainingPipeline:
 
         logger.info(" ")
         logger.info("   🧠 [TRAINING] Re-compiling optimized LSTM+Transformer Model Architecture...")
+        
+        # ---------- FIX: Model ke internal counters update karo ----------
+        def shift_indices(indices, remove_idx):
+            new = []
+            for idx in indices:
+                if idx == remove_idx:
+                    continue
+                if idx > remove_idx:
+                    new.append(idx - 1)
+                else:
+                    new.append(idx)
+            return new
+
+        model._cont_indices = shift_indices(model._cont_indices, close_idx_to_remove)
+        model._cat_indices = shift_indices(model._cat_indices, close_idx_to_remove)
+        model._num_cont_features = len(model._cont_indices)
+        model._num_cat_features = len(model._cat_indices)
         # Model ka input shape feature_cols ke hisaab se build ho (close ke bina)
         model.build((X_train_seq.shape[1], X_train_seq.shape[2]))
         logger.info("   🧠 [TRAINING] Fitting neural nodes. Processing epochs safely...")
