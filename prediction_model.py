@@ -301,9 +301,12 @@ class PredictionModel:
         return X_train, X_val, y_train, y_val, feature_cols, close_idx
 
     def _split_to_multi_input(self, X: np.ndarray) -> Dict[str, np.ndarray]:
+        max_idx = X.shape[2] - 1
+        cont_idx = [i for i in self._cont_indices if i <= max_idx]
+        cat_idx = [i for i in self._cat_indices if i <= max_idx]
         return {
-            'cont_input': X[:, :, self._cont_indices],
-            'cat_input': X[:, :, self._cat_indices]
+            'cont_input': X[:, :, cont_indices],
+            'cat_input': X[:, :, cat_indices]
         }
 
     def train(self, X_train, X_val, y_train, y_val):
