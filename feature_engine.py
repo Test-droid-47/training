@@ -308,13 +308,9 @@ class FeatureEngine:
 
         print("[DEBUG] Calculating HTF Levels...")
         if 'timestamp' in df.columns:
-            df_dt = df[['timestamp', 'high', 'low']].copy()
-            df_dt['timestamp'] = pd.to_datetime(df_dt['timestamp'])
-            df_dt = df_dt.set_index('timestamp')
-            df_4h = df_dt.resample('4h').agg({'high': 'max', 'low': 'min'})
-            df_4h = df_4h.reindex(df_dt.index, method='ffill')
-            df['htf_high'] = df_4h['high'].values
-            df['htf_low'] = df_4h['low'].values
+            
+            df['htf_high'] = df['high'].rolling(4).max().ffill()
+            df['htf_low'] = df['low'].rolling(4).min().ffill()
         else:
             print("[DEBUG] WARNING: 'timestamp' column not found, using rolling 24h fallback")
             df['htf_high'] = df['high'].rolling(24).max()
