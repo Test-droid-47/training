@@ -7,7 +7,6 @@ Part 2 – Model Training Pipeline (Standalone - Streamlined HFT Edition with Op
 """
 
 import os
-os.environ['NUMBA_DISABLE_JIT'] = '1'
 import sys
 import time
 import json
