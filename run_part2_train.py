@@ -7,8 +7,6 @@ Part 2 – Model Training Pipeline (Standalone - Streamlined HFT Edition with Op
 """
 
 import os
-os.environ['NUMBA_CAPTURED_ERRORS'] = 'old_style'
-os.environ['NUMBA_NUM_THREADS'] = '1'
 import sys
 import time
 import json
