@@ -112,7 +112,7 @@ class PredictionModel:
             optimizer=AdamW(learning_rate=lr_schedule, weight_decay=1e-4),
             loss={
                 'price_pred': 'huber',
-                'direction': SparseCategoricalCrossentropy(label_smoothing=0.1),
+                'direction': 'sparse_Categorical_Crossentropy',
                 'entry_quality': 'huber',
                 'exit_bar': 'huber',
                 'position_size': 'huber'
