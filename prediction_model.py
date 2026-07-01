@@ -365,7 +365,6 @@ class PredictionModel:
             epochs=self.cfg.get('epochs', 100),
             batch_size=self.cfg.get('batch_size', 32),
             callbacks=callbacks,
-            class_weight=multi_output_class_weights,
             shuffle=False,
             verbose=1
         )
