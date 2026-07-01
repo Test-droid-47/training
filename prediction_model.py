@@ -68,7 +68,7 @@ class PredictionModel:
         x_cont = Conv1D(64, kernel_size=5, padding='causal', activation='gelu', name='conv_med')(x_cont)
         x_cont = LayerNormalization(name='ln_conv')(x_cont)
         
-        x_cont = LSTM(64, return_sequences=True, name='lstm_1')(x_cont)  # 1 LSTM only
+        x_cont = LSTM(self.cfg.get('lstm_units_1', 128), return_sequences=True, name='lstm_1')(x_cont)  # 1 LSTM only
         x_cont = Dropout(dr, name='drop_lstm')(x_cont)
 
         x_cat = Dense(32, activation='gelu', name='cat_latent_projection')(in_cat)
@@ -120,9 +120,9 @@ class PredictionModel:
             loss_weights={
                 'price_pred': 1.0,
                 'direction': 3.0,        # Direction ko priority
-                'entry_quality': 1.0,
-                'exit_bar': 0.5,
-                'position_size': 0.5
+                'entry_quality': 3.0,
+                'exit_bar': 2.0,
+                'position_size': 2.0
             },
             metrics={
                 'price_pred': ['mae'],
@@ -357,7 +357,6 @@ class PredictionModel:
 
         callbacks = [
             EarlyStopping(monitor='val_loss', patience=self.cfg.get('early_stop_patience', 15), restore_best_weights=True, verbose=1),
-            ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=10, min_lr=1e-5, verbose=0),  # Backup LR scheduler
         ]
         self.model.fit(
             X_train_multi, y_train,
