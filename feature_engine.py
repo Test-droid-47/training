@@ -4,7 +4,7 @@ from typing import Dict, Optional, List
 import faulthandler
 import signal
 
-# 🔥 Enable segfault handler to catch C-level crashes
+# Enable segfault handler to catch C-level crashes (just for debugging)
 faulthandler.enable()
 
 try:
@@ -53,6 +53,7 @@ class FeatureEngine:
             mean_centered = segment - np.mean(segment)
             cumsum = np.cumsum(mean_centered)
             r = np.max(cumsum) - np.min(cumsum)
+            # Manual sample std (ddof=1) – Numba compatible
             s = np.sqrt(np.sum((segment - np.mean(segment))**2) / (len(segment) - 1))
             if s > 1e-10:
                 rs = r / s
@@ -307,15 +308,9 @@ class FeatureEngine:
         df['vw_delta'] = (delta.rolling(20).mean() / (df['volume'].rolling(20).mean() + 1e-10)).fillna(0.0).astype(np.float32)
 
         print("[DEBUG] Calculating HTF Levels...")
-        if 'timestamp' in df.columns:
-            
-            df['htf_high'] = df['high'].rolling(4).max().ffill()
-            df['htf_low'] = df['low'].rolling(4).min().ffill()
-        else:
-            print("[DEBUG] WARNING: 'timestamp' column not found, using rolling 24h fallback")
-            df['htf_high'] = df['high'].rolling(24).max()
-            df['htf_low'] = df['low'].rolling(24).min()
-        
+        # Safe rolling 4-period high/low (1h → 4h) — NO resample, NO segfault
+        df['htf_high'] = df['high'].rolling(4).max().ffill()
+        df['htf_low'] = df['low'].rolling(4).min().ffill()
         df['close_vs_htf'] = ((df['close'] - df['htf_low']) / (df['htf_high'] - df['htf_low'] + 1e-10)).fillna(0.5).astype(np.float32)
 
         print("[DEBUG] Calculating Z-Score...")
@@ -333,10 +328,10 @@ class FeatureEngine:
                 ema_v = ta.ema(df['volume'], length=20)
                 df['vol_ratio'] = (df['volume'] / (ema_v + 1e-10)).fillna(1.0).astype(np.float32)
                 
-                vwap_s = ta.vwap(df['high'], df['low'], df['close'], df['volume'])
-                if vwap_s is None:
-                    vwap_s = df['close'].copy()
-                df['close_vs_vwap'] = ((df['close'] - vwap_s) / (vwap_s + 1e-10)).fillna(0.0).astype(np.float32)
+                # 🔥 FIX: Manual VWAP (safe, no segfault)
+                typical_price = (df['high'] + df['low'] + df['close']) / 3
+                vwap = (df['volume'] * typical_price).rolling(20).sum() / (df['volume'].rolling(20).sum() + 1e-10)
+                df['close_vs_vwap'] = ((df['close'] - vwap) / (vwap + 1e-10)).fillna(0.0).astype(np.float32)
                 
                 candle_delta = np.where(df['close'] >= df['open'], df['volume'], -df['volume'])
                 cvd = pd.Series(candle_delta).rolling(window=100, min_periods=20).sum()
@@ -368,6 +363,7 @@ class FeatureEngine:
                 print(f"[DEBUG] TA indicators failed: {e}")
                 raise
         else:
+            # fallback if pandas_ta not available
             df['vol_ratio'] = 1.0
             df['close_vs_vwap'] = 0.0
             df['cvd_trend'] = 0
