@@ -418,7 +418,7 @@ class PredictionModel:
         sample_weights = {
             "price_pred": np.ones(len(y_train['direction']), dtype=np.float32),
             "direction": direction_sw,
-            "enter_quality": np.ones(len(y_train['direction']), dtype=np.float32),
+            "entry_quality": np.ones(len(y_train['direction']), dtype=np.float32),
             "exit_bar": np.ones(len(y_train['direction']), dtype=np.float32),
             "position_size": np.ones(len(y_train['direction']), dtype=np.float32),
         }
