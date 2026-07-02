@@ -414,14 +414,15 @@ class PredictionModel:
             [class_weights[int(label)] for label in y_train['direction']],
             dtype=np.float32
         )
-        
-        sample_weights = {
-            "price_pred": np.ones(len(y_train['direction']), dtype=np.float32),
-            "direction": direction_sw,
-            "entry_quality": np.ones(len(y_train['direction']), dtype=np.float32),
-            "exit_bar": np.ones(len(y_train['direction']), dtype=np.float32),
-            "position_size": np.ones(len(y_train['direction']), dtype=np.float32),
-        }
+
+        n_train = len(y_train['direction'])
+        sample_weights = [
+            np.ones(n_train, dtype=np.float32),
+            direction_sw,
+            np.ones(n_train, dtype=np.float32),
+            np.ones(n_train, dtype=np.float32),
+            np.ones(n_train, dtype=np.float32),
+        ]
 
         # ============================================================
         # 🔥 FIX: EarlyStopping on val_direction_loss
@@ -436,10 +437,26 @@ class PredictionModel:
             ),
         ]
 
+        y_train_list = [
+    y_train['price_pred'],
+    y_train['direction'],
+    y_train['entry_quality'],
+    y_train['exit_bar'],
+    y_train['position_size'],
+]
+
+y_val_list = [
+    y_val['price_pred'],
+    y_val['direction'],
+    y_val['entry_quality'],
+    y_val['exit_bar'],
+    y_val['position_size'],
+]
+
         self.model.fit(
-            X_train_multi, y_train,
+            X_train_multi, y_train_list,
             sample_weight=sample_weights,
-            validation_data=(X_val_multi, y_val),
+            validation_data=(X_val_multi, y_val_list),
             epochs=self.cfg.get('epochs', 100),
             batch_size=self.cfg.get('batch_size', 32),
             callbacks=callbacks,
