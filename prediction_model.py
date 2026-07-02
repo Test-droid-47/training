@@ -169,7 +169,7 @@ class PredictionModel:
             y_direction[smooth_returns >= high_thr] = 2
         else:
             # Fallback: fixed threshold (if quantiles not provided)
-            threshold = max(atrs[:-1] / (closes[:-1] + 1e-10) * 0.3, 0.0008)
+            threshold = np.maximum(atrs[:-1] / (closes[:-1] + 1e-10) * 0.3, 0.0008)
             y_direction = np.ones(n-1, dtype=np.int32)
             y_direction[smooth_returns > threshold] = 2
             y_direction[smooth_returns < -threshold] = 0
